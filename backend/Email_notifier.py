@@ -7,9 +7,8 @@ import time
 from Authenticate_email import authenticate_user
 
 # Twilio credentials
-account_sid = 'AC7914b731996b866f2dfe7a25327c235d'
-auth_token = 'd7e8f39cf66f8141207f0774dfeba5b4'
-user_whatsapp = '+918264782290'
+account_sid = 'twilight_account_sid'
+auth_token = 'twilight_auth_token'
 client = Client(account_sid, auth_token)
 
 # Notification preferences
