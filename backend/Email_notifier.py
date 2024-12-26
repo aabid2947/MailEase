@@ -7,8 +7,7 @@ import time
 from Authenticate_email import authenticate_user
 
 # Twilio credentials
-account_sid = 'twilight_account_sid'
-auth_token = 'twilight_auth_token'
+# add your own credentials here
 client = Client(account_sid, auth_token)
 
 # Notification preferences
