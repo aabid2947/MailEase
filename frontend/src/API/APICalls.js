@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const URL = 'http://127.0.0.1:8000'
+const URL = 'https://mail-backend-pi.vercel.app/'
 export const AutheticateUser = async (formData) => {
     try {
         console.log("FormData contents:");
