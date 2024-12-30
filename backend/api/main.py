@@ -65,6 +65,6 @@ async def notify_user(preference: Preference):
     return {"message": "Email monitoring started!"}
 
 # Health check endpoint to verify if the API is running
-@app.get("/health-check")
+@app.get("/")
 async def health_check():
     return {"status": "running", "message": "Email Cleaner API is active."}
