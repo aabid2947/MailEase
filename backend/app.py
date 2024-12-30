@@ -1,71 +1,52 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from pydantic import BaseModel
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-import os
-import pickle
-from Delete_emails import delete_emails_based_on_params
 from fastapi.middleware.cors import CORSMiddleware
-from Email_notifier import monitor_emails
+import os
 import time
+from Authenticate_user import authenticate_user, save_service, load_service  # Import the functions from authentication.py
+from Delete_emails import delete_emails_based_on_params
+from Email_notifier import monitor_emails
 
-
+# Initialize FastAPI application
 app = FastAPI()
 
-
-
+# Add CORS middleware to handle cross-origin requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Or specify allowed domains
+    allow_origins=["*"],  # Allows all origins, can be modified for specific domains
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
 )
 
-SCOPES = ['https://mail.google.com/']
-UPLOAD_FOLDER = 'credentials'
-SERVICE_FOLDER = 'services'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(SERVICE_FOLDER, exist_ok=True)
-
-# Pydantic model for request body
+# Pydantic models for request bodies
 class Criteria(BaseModel):
     criteria: dict
-    
+
 class Preference(BaseModel):
     preference: dict
 
-def save_service(service, user_id):
-    service_file = os.path.join(SERVICE_FOLDER, f"{user_id}_service.pkl")
-    with open(service_file, 'wb') as f:
-        pickle.dump(service, f)
-
-def load_service(user_id):
-    service_file = os.path.join(SERVICE_FOLDER, f"{user_id}_service.pkl")
-    if os.path.exists(service_file):
-        with open(service_file, 'rb') as f:
-            return pickle.load(f)
-    return None
-
+# API endpoint to authenticate the user
 @app.post("/authenticate")
-async def authenticate_user(file: UploadFile = File(...)):
-    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+async def authenticate_user_endpoint(file: UploadFile = File(...)):
+    # Save the uploaded credentials file to the local system
+    file_path = os.path.join('credentials', file.filename)
     with open(file_path, 'wb') as f:
         f.write(await file.read())
-        
+
+    # Wait for the file to be fully written before starting authentication
     time.sleep(1)
-    
+
     try:
-        flow = InstalledAppFlow.from_client_secrets_file(file_path, SCOPES)
-        creds = flow.run_local_server(port=4000)
-        service = build('gmail', 'v1', credentials=creds)
-        save_service(service, "default_user")
+        # Call the function from authentication.py to authenticate and return the service
+        service = authenticate_user(file_path)
         return {"message": "Authentication successful!"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
     finally:
-        os.remove(file_path)
+        os.remove(file_path)  # Clean up by removing the uploaded credentials file
 
+# API endpoint to delete emails based on provided criteria
 @app.post("/delete-emails")
 async def delete_emails(criteria: Criteria):
     service = load_service("default_user")
@@ -74,19 +55,16 @@ async def delete_emails(criteria: Criteria):
     await delete_emails_based_on_params(service=service, criteria=criteria.criteria)
     return {"message": "Email deletion completed!"}
 
+# API endpoint to monitor emails based on provided preferences
 @app.post("/monitor-mails")
-async def notify_user(preference:Preference):
-     
+async def notify_user(preference: Preference):
     service = load_service("default_user")
     if not service:
         raise HTTPException(status_code=400, detail="Authentication required")
     await monitor_emails(service=service, preferences=preference.preference)
     return {"message": "Email monitoring started!"}
 
-
+# Health check endpoint to verify if the API is running
 @app.get("/health-check")
 async def health_check():
     return {"status": "running", "message": "Email Cleaner API is active."}
-
-# Run the FastAPI application with Uvicorn
-# uvicorn app:app --reload
