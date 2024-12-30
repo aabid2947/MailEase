@@ -3,9 +3,9 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import time
-from Authenticate_user import authenticate_user, save_service, load_service  # Import the functions from authentication.py
-from Delete_emails import delete_emails_based_on_params
-from Email_notifier import monitor_emails
+from API.Authenticate_user import authenticate_user, save_service, load_service  # Import the functions from authentication.py
+from API.Delete_emails import delete_emails_based_on_params
+from API.Email_notifier import monitor_emails
 
 # Initialize FastAPI application
 app = FastAPI()
