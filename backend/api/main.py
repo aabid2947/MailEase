@@ -14,7 +14,7 @@ app = FastAPI()
 # Add CORS middleware to handle cross-origin requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins, can be modified for specific domains
+    allow_origins=["*","https://mail-ease-qoty-8y58zjvxo-aabid2947s-projects.vercel.app"],  # Allows all origins, can be modified for specific domains
     allow_credentials=True,
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allows all headers
