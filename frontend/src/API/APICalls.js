@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const URL = 'https://mailease-backend-cy701ifgn-aabid2947s-projects.vercel.app/';
+const URL = 'https://mailease-backend-cy701ifgn-aabid2947s-projects.vercel.app';
 const VERSEL_SECRET_KEY = 'vCD24dEZQ0Ej8TnuMf9gccSqq4AZgpvF'; // Secret for protection bypass
 
 // Utility function to add protection bypass headers

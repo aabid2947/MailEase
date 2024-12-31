@@ -5,8 +5,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from fastapi import HTTPException
 import pickle
 import uuid
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 import base64
 
 # Load environment variables from .env file
@@ -18,14 +18,12 @@ SCOPES = ['https://mail.google.com/']  # Gmail API scope
 # Retrieve the Firebase credentials (encoded in base64) from environment variables
 encoded_credential = os.getenv('FIREBASE_CREDENTIALS')
 
-
 if encoded_credential:
     # Decode the base64 credentials
     decoded_credentials = base64.b64decode(encoded_credential).decode('utf-8')
     # Initialize Firebase Admin SDK with the in-memory JSON
     cred = credentials.Certificate(eval(decoded_credentials))
     
-
     try:
         firebase_admin.initialize_app(cred)
         print("Firebase initialized successfully!")
@@ -100,9 +98,16 @@ def authenticate_user(credentials_path: str):
         The unique user ID (UUID) for the authenticated user.
     """
     try:
+        # Modify the redirect URI for the correct production environment
+        redirect_uri = os.getenv('OAUTH_REDIRECT_URI', 'https://your-production-url.com/callback')
+
         # Authenticate and build the Gmail API service
         flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
-        creds = flow.run_local_server(port=4000)
+        
+        # Set the redirect URI to ensure it matches your production environment
+        flow.redirect_uri = redirect_uri
+        
+        creds = flow.run_local_server(port=0)  # Using port=0 to auto-choose a free port
         service = build('gmail', 'v1', credentials=creds)
         
         # Generate a unique user ID and save the service to Firestore
