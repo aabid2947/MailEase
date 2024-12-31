@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const URL = 'http://127.0.0.1:8000'
+const URL = 'https://mailease-backend-cy701ifgn-aabid2947s-projects.vercel.app/'
 export const AutheticateUser = async (formData) => {
     try {
         console.log("FormData contents:");
