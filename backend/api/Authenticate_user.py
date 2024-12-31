@@ -1,86 +1,115 @@
-import os
-import pickle
-from google_auth_oauthlib.flow import InstalledAppFlow
+import firebase_admin
+from firebase_admin import credentials, firestore
 from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
 from fastapi import HTTPException
-import time
+import pickle
+import uuid
+from dotenv import load_dotenv
+import os
+import base64
 
-# Define the folder to store the credentials and service files
-UPLOAD_FOLDER = 'credentials'  # Folder to store uploaded credentials
-SERVICE_FOLDER = 'services'    # Folder to store the saved Gmail API service file
+# Load environment variables from .env file
+load_dotenv()
 
-# Create the folders if they don't already exist
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(SERVICE_FOLDER, exist_ok=True)
+# Constants
+SCOPES = ['https://mail.google.com/']  # Gmail API scope
 
-# Define the Google API scopes required for accessing Gmail
-SCOPES = ['https://mail.google.com/']  # Scope for Gmail access
+# Retrieve the Firebase credentials (encoded in base64) from environment variables
+encoded_credential = os.getenv('FIREBASE_CREDENTIALS')
 
-def save_service(service, user_id):
+
+if encoded_credential:
+    # Decode the base64 credentials
+    decoded_credentials = base64.b64decode(encoded_credential).decode('utf-8')
+    # Initialize Firebase Admin SDK with the in-memory JSON
+    cred = credentials.Certificate(eval(decoded_credentials))
+    
+
+    try:
+        firebase_admin.initialize_app(cred)
+        print("Firebase initialized successfully!")
+    except Exception as e:
+        print(f"Error initializing Firebase: {str(e)}")
+else:
+    print("Firebase credentials are not set in environment variables.")
+
+# Firestore reference
+db = firestore.client()
+
+# Function to save the Gmail service to Firebase Firestore
+def save_service_to_firestore(service, user_id):
     """
-    Save the Gmail service to a file for future use.
+    Saves the Gmail API service to Firestore (as serialized data).
     
     Args:
-        service: The Gmail API service object to be saved.
-        user_id: The unique identifier for the user (used to name the service file).
-    """
-    # Define the path where the service file will be stored
-    service_file = os.path.join(SERVICE_FOLDER, f"{user_id}_service.pkl")
-    
-    # Open the file and save the service object using pickle
-    with open(service_file, 'wb') as f:
-        pickle.dump(service, f)
-
-def load_service(user_id):
-    """
-    Load the Gmail service from a previously saved file.
-    
-    Args:
-        user_id: The unique identifier for the user (used to load the service file).
-        
-    Returns:
-        The saved Gmail API service object, or None if not found.
-    """
-    # Define the path to the service file
-    service_file = os.path.join(SERVICE_FOLDER, f"{user_id}_service.pkl")
-    
-    # Check if the service file exists
-    if os.path.exists(service_file):
-        # Load the service object from the file using pickle
-        with open(service_file, 'rb') as f:
-            return pickle.load(f)
-    
-    # Return None if the service file does not exist
-    return None
-
-def authenticate_user(file_path: str):
-    """
-    Authenticate the user using the OAuth flow and return the Gmail service object.
-    
-    Args:
-        file_path: The path to the credentials file used for authentication.
-        
-    Returns:
-        service: The authenticated Gmail API service object.
-        
-    Raises:
-        HTTPException: If the authentication process fails, an exception is raised.
+        service: The Gmail API service object.
+        user_id: The unique user identifier.
     """
     try:
-        # Start the OAuth flow to authenticate the user
-        flow = InstalledAppFlow.from_client_secrets_file(file_path, SCOPES)
+        # Serialize the service object using pickle
+        service_data = pickle.dumps(service)
+
+        # Add service data to Firestore
+        doc_ref = db.collection('gmail_services').document(user_id)
+        doc_ref.set({'service': service_data})
+        print(f"Service for user {user_id} saved successfully to Firestore.")
+    except Exception as e:
+        print(f"Error saving service to Firestore: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload service to Firestore: {str(e)}")
+
+# Function to load the Gmail API service from Firebase Firestore
+def load_service(user_id):
+    """
+    Loads the Gmail API service for a user from Firestore.
+    
+    Args:
+        user_id: The unique user identifier.
+    
+    Returns:
+        The Gmail API service object.
+    """
+    try:
+        doc_ref = db.collection('gmail_services').document(user_id)
+        doc = doc_ref.get()
         
-        # Run the local server to complete the authentication
+        if doc.exists:
+            # Deserialize the service object from Firestore
+            service_data = doc.to_dict().get('service')
+            service = pickle.loads(service_data)
+            
+            # Build and return the Gmail API service
+            return service
+        else:
+            print(f"No service found for user {user_id}.")
+            return None
+    except Exception as e:
+        print(f"Error loading service for user {user_id}: {str(e)}")
+        raise HTTPException(status_code=404, detail=f"Failed to load service from Firestore: {str(e)}")
+
+# Function to authenticate the user and save the credentials
+def authenticate_user(credentials_path: str):
+    """
+    Authenticates the user via OAuth, saves credentials to Firestore, 
+    and builds the Gmail service for the user.
+
+    Args:
+        credentials_path: Path to the Google client credentials JSON file.
+    
+    Returns:
+        The unique user ID (UUID) for the authenticated user.
+    """
+    try:
+        # Authenticate and build the Gmail API service
+        flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
         creds = flow.run_local_server(port=4000)
-        
-        # Build the Gmail API service using the obtained credentials
         service = build('gmail', 'v1', credentials=creds)
         
-        # Save the authenticated service for future use
-        save_service(service, "default_user")
+        # Generate a unique user ID and save the service to Firestore
+        unique_id = str(uuid.uuid4())
+        save_service_to_firestore(service, unique_id)
         
-        # Return the authenticated service
-        return service
+        return unique_id
     except Exception as e:
-        # Raise an exception if authentication fails
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
+

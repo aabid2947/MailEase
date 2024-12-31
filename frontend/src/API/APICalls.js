@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const URL = 'https://mail-backend-pi.vercel.app'
+const URL = 'http://127.0.0.1:8000'
 export const AutheticateUser = async (formData) => {
     try {
         console.log("FormData contents:");
@@ -29,7 +29,8 @@ export const MonitorEmails = async (preferences, interval) => {
             keywords: preferences.keywords,
             user_phone_number: preferences.user_phone_number,
 
-            interval: interval
+            interval: interval,
+            uuid: preferences.uuid
         }
         const response = await axios.post(`${URL}/monitor-mails`,{preference:preference});
 

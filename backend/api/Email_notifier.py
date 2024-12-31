@@ -46,6 +46,7 @@ def get_email_details(service, message_id):
     """
     Retrieve the details of a specific email using its message ID.
     
+    
     Args:
         service: Gmail API service object.
         message_id: The unique ID of the email message.

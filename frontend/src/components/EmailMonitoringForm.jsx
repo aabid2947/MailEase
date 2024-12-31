@@ -13,6 +13,7 @@ const EmailMonitoringForm = () => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [uuid, setUuid] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,6 +23,7 @@ const EmailMonitoringForm = () => {
       email_addresses: emailAddresses.split(',').map((email) => email.trim()),
       keywords: keywords.split(',').map((keyword) => keyword.trim()),
       user_phone_number: phoneNumber,
+      uuid: uuid
     };
 
     try {
@@ -144,6 +146,25 @@ const EmailMonitoringForm = () => {
               <p className="mt-1 text-xs text-gray-100">Your phone number with country code for notifications</p>
             </div>
 
+            <div>
+              <label htmlFor="uuid" className="block text-sm font-medium text-gray-100 mb-1">
+                Your UUID
+              </label>
+              <div className="relative">
+                <PhoneIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-100" />
+                <input
+                  type="string"
+                  id="uuid"
+                  value={uuid}
+                  onChange={(e) => setUuid(e.target.value)}
+                  className={`${inputClasses} pl-10`}
+                  placeholder="+1234567890"
+                  required
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-100">Your Uuid </p>
+            </div>
+
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -175,7 +196,7 @@ const EmailMonitoringForm = () => {
               transition={{ duration: 0.5 }}
               className="mt-8 p-6 bg-gray-700 rounded-xl border border-gray-600"
             >
-              <h3 className="text-xl font-semibold text-red-400 mb-2">Error</h3>
+              <h3 className="text-xl font-semibold text-green-400 mb-2">Error</h3>
               <p className="text-gray-300">{response}</p>
             </motion.div>
           )}

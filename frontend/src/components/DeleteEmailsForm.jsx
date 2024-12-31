@@ -16,6 +16,7 @@ const DeleteEmailsForm = () => {
         unread: false,
         specific_senders: [],
         message_threshold: 5,
+        uuid: 1
     });
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState(null);
@@ -109,6 +110,16 @@ const DeleteEmailsForm = () => {
                             />
                         </div>
 
+                        <div>
+                            <label className="block text-sm font-medium mb-1">UUID:</label>
+                            <input
+                                type="string"
+                                name="uuid"
+                                value={criteria.uuid}
+                                onChange={(e) => handleChange('uuid', e.target.value)}
+                                className="mt-1 block w-full px-3 py-2 bg-transparent border border-gray-100 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
