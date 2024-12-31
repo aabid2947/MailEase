@@ -1,13 +1,13 @@
 import axios from "axios";
 
-const URL = 'https://mailease-backend-cy701ifgn-aabid2947s-projects.vercel.app';
-const VERSEL_SECRET_KEY = 'vCD24dEZQ0Ej8TnuMf9gccSqq4AZgpvF'; // Secret for protection bypass
+const URL = 'http://localhost:8000';
+// const VERSEL_SECRET_KEY = 'vCD24dEZQ0Ej8TnuMf9gccSqq4AZgpvF'; // Secret for protection bypass
 
 // Utility function to add protection bypass headers
 const getHeaders = () => {
     return {
         'Content-Type': 'multipart/form-data',
-        'x-vercel-protection-bypass': VERSEL_SECRET_KEY,
+       
     };
 }
 
@@ -43,9 +43,7 @@ export const MonitorEmails = async (preferences, interval) => {
             uuid: preferences.uuid
         }
 
-        const response = await axios.post(`${URL}/monitor-mails`, { preference: preference }, {
-            headers: getHeaders(),  // Include headers here too
-        });
+        const response = await axios.post(`${URL}/monitor-mails`, { preference: preference });
 
         if (response.data.status === "success") {
             return response;
@@ -61,8 +59,6 @@ export const DeleteEmails = async (criteria) => {
     try {
         const response = await axios.post(`${URL}/delete-emails`, {
             criteria: criteria,
-        }, {
-            headers: getHeaders(),  // Include headers here too
         });
 
         if (response.data.status === "success") {

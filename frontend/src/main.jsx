@@ -14,6 +14,7 @@ import EmailMonitoringPage from './pages/EmailMonitoringPage.jsx';
 import AutheticatePage from './pages/AuthenticatePage.jsx';
 
 import DeleteEmailPage from './pages/DeleteEmailPage.jsx';
+import PrivacyPolicy from './components/Policy.jsx';
 
 
 const router = createBrowserRouter([
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
   {
     path:"/authenticate",
     element:<AutheticatePage/>
+  },
+  {
+    path:"/policy",
+    element:<PrivacyPolicy/>
   },
 
 
